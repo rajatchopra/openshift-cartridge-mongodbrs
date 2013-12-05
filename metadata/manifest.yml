@@ -12,7 +12,7 @@ Compatible-Versions:
 - 0.2.2
 - 0.2.3
 - 0.2.4
-Cartridge-Vendor: redhat
+Cartridge-Vendor: rc
 License: ASL 2.0
 Vendor: 10gen
 Categories:
@@ -20,7 +20,8 @@ Categories:
 - database
 - nosql
 - embedded
-Website: http://www.10gen.com
+Website: http://www.mongodb.org
+Source-Url: https://github.com/rajatchopra/openshift-cartridge-mongodbrs.git
 Help-Topics:
   Building with MongoDB: https://www.openshift.com/developers/mongodb
 Cart-Data:

@@ -5,9 +5,10 @@ require 'mongo'
 gear_id = ARGV[0]
 sub_info = ARGV[3].gsub("'","").gsub("\n","").split(' ').map { |si| si.split('=') }
 
-exit 0 if gear_id!=sub_info.first.first
-
+gear_list = sub_info.map { |si| si[0] }.sort
 addr_list = sub_info.map { |si| si[1] }
+
+exit 0 if gear_id!=gear_list.first
 
 #initiate rs with first one
 master = addr_list.first
@@ -24,10 +25,14 @@ rescue Mongo::ConnectionFailure
 end
 
 #check if replset already has the correct members..
-status = master_db.command({ "replSetGetStatus" => nil })
-if status.has_key? "members" and status["members"].length==(slave_list.length+1)
-  puts "Replica set already exists"
-  exit 0
+begin
+  status = master_db.command({ "replSetGetStatus" => nil })
+  if status.has_key? "members" and status["members"].length==(slave_list.length+1)
+    puts "Replica set already exists"
+    exit 0
+  end
+rescue Mongo::OperationFailure=>of
+  # expected if rs.initiate has not been done yet
 end
 
 
@@ -48,6 +53,4 @@ rescue Mongo::OperationFailure => of
   end
 end
 
-status = master_db.command({ "replSetGetStatus" => nil })
-File.write("/tmp/repl_set_status.out", status.inspect)
 exit 0

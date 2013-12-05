@@ -23,6 +23,9 @@ echo "admin" > $OPENSHIFT_MONGODB_DIR/env/OPENSHIFT_MONGODB_DB_USERNAME
 echo "$password" > $OPENSHIFT_MONGODB_DIR/env/OPENSHIFT_MONGODB_DB_PASSWORD
 echo "mongodb://admin:$password@$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/" > $OPENSHIFT_MONGODB_DIR/env/OPENSHIFT_MONGODB_DB_URL
 
+# quit now, figure about auth in replica sets later
+exit 0
+
 client_result ""
 client_result "MongoDB ${version} database added.  Please make note of these credentials:"
 client_result ""
