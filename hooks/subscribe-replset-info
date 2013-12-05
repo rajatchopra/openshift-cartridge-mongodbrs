@@ -1,0 +1,53 @@
+#!/usr/bin/oo-ruby
+
+require 'mongo'
+
+gear_id = ARGV[0]
+sub_info = ARGV[3].gsub("'","").gsub("\n","").split(' ').map { |si| si.split('=') }
+
+exit 0 if gear_id!=sub_info.first.first
+
+addr_list = sub_info.map { |si| si[1] }
+
+#initiate rs with first one
+master = addr_list.first
+slave_list = addr_list[1..-1]
+
+
+# check if replica set already exists
+
+begin
+  master_db = Mongo::MongoClient.new(master.split(':').first, master.split(':')[1].to_i).db('admin')
+rescue Mongo::ConnectionFailure
+  puts "CLIENT_ERROR : Failed to connect to #{master}"
+  exit 1
+end
+
+#check if replset already has the correct members..
+status = master_db.command({ "replSetGetStatus" => nil })
+if status.has_key? "members" and status["members"].length==(slave_list.length+1)
+  puts "Replica set already exists"
+  exit 0
+end
+
+
+config = { '_id' => ENV['OPENSHIFT_APP_NAME'], "members" => [ { '_id' => 0, 'host' => master} ] }
+id = 1
+slave_list.each { |slave|
+  config["members"] << { '_id' => id, 'host' => slave }
+  id += 1
+}
+begin
+  master_db.command({ "replSetInitiate" => config })
+rescue Mongo::OperationFailure => of
+  # replica set is already set?
+  if of.result["errmsg"].include? "already initialized"
+    # reconfig
+    config["version"] = (slave_list.length + 1)
+    master_db.command({ "replSetReconfig" => config })
+  end
+end
+
+status = master_db.command({ "replSetGetStatus" => nil })
+File.write("/tmp/repl_set_status.out", status.inspect)
+exit 0

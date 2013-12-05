@@ -1,0 +1,33 @@
+#!/bin/bash -e
+
+case "$1" in
+  -v|--version)
+    version="$2"
+esac
+
+source $OPENSHIFT_CARTRIDGE_SDK_BASH
+
+# install premade journal
+mkdir -p $OPENSHIFT_MONGODB_DIR/data
+if [ -e $OPENSHIFT_MONGODB_DIR/usr/journal-cache/journal.tar.gz ]; then
+    echo 'Unpacking premade journal'
+    tar -C $OPENSHIFT_MONGODB_DIR/data -xzf $OPENSHIFT_MONGODB_DIR/usr/journal-cache/journal.tar.gz
+fi
+
+# generate password and setup env vars
+echo 'Generating username and password'
+
+password=$(generate_password)
+
+echo "admin" > $OPENSHIFT_MONGODB_DIR/env/OPENSHIFT_MONGODB_DB_USERNAME
+echo "$password" > $OPENSHIFT_MONGODB_DIR/env/OPENSHIFT_MONGODB_DB_PASSWORD
+echo "mongodb://admin:$password@$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/" > $OPENSHIFT_MONGODB_DIR/env/OPENSHIFT_MONGODB_DB_URL
+
+client_result ""
+client_result "MongoDB ${version} database added.  Please make note of these credentials:"
+client_result ""
+client_result "   Root User:     admin"
+client_result "   Root Password: $password"
+client_result "   Database Name: $OPENSHIFT_APP_NAME"
+client_result ""
+client_result 'Connection URL: mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/'
